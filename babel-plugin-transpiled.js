@@ -7,6 +7,7 @@ Object.defineProperty(exports, "__esModule", {
 exports.default = function (babel) {
   var t = babel.types;
 
+
   var removeFromBody = function removeFromBody(path) {
     return path.parent.body = path.parent.body.filter(function (x) {
       return x != path.node;
@@ -30,15 +31,29 @@ exports.default = function (babel) {
   var appendDefine = function appendDefine(path) {
     var name = path.node.id.name;
     var register = babel.transform('customElements.define(\'hyper-' + name.toLowerCase() + '\', ' + name + ')');
-    path.parent.body.splice(path.parent.body.findIndex(function(x){ return x === path.node}) + 1, 0, register.ast.program.body[0])
+    path.parent.body.splice(path.parent.body.findIndex(function (x) {
+      return x === path.node;
+    }) + 1, 0, register.ast.program.body[0]);
   };
 
   var moveRender = function moveRender(path) {
+    var isFragment = path.node.value.openingElement.name.name === 'fragment';
+    path.path.traverse({
+      JSXExpressionContainer: function JSXExpressionContainer(path, context) {
+        if (!path.inList) {
+          var _code = babel.transformFromAst(t.file(t.program([t.expressionStatement(path.node.expression)]))).code;
+          _code = _code.substring(0, _code.length - 1);
+          path.parent.value = t.stringLiteral('${' + _code.replace(/\n/g, '') + '}');
+        }
+      }
+    });
     var code = babel.transformFromAst(t.file(t.program([t.expressionStatement(path.node.value)]))).code;
 
-    // TODO: if fragment ... else
+    // TODO: if name=fragment ... else
     code = code.substring(0, code.length - 1);
-
+    if (isFragment) {
+      code = code.substring(10, code.length - 11);
+    }
     path.parent.body.push(babel.transform('class _{render(){ return this._render`' + code + '`}}').ast.program.body[0].body.body[0]
 
     // remove node
@@ -57,6 +72,18 @@ exports.default = function (babel) {
         var sc = path.node.superClass;
         if (sc && sc.property.name === 'Component' && sc.object.name === 'hyperHTML') {
           addConstructor(path);
+          path.traverse({
+            ClassProperty: function ClassProperty(p) {
+              var item = p.node;
+              if (item.type === 'ClassProperty') {
+                if (item.key.name === 'render') {
+                  moveRender({ node: item, parent: path.node.body, path: p });
+                } else {
+                  moveOther({ node: item, parent: path.node.body });
+                }
+              }
+            }
+          });
           path.node.body.body.forEach(function (item) {
             if (item.type === 'ClassProperty') {
               if (item.key.name === 'render') {

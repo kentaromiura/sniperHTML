@@ -22,13 +22,23 @@ export default function (babel) {
   }
   
   const moveRender = path => {
-    let code = 
-          
-  babel.transformFromAst(t.file(t.program([t.expressionStatement(path.node.value)]))).code
+    const isFragment = path.node.value.openingElement.name.name === 'fragment'
+    path.path.traverse({
+      JSXExpressionContainer(path, context){
+        if(!path.inList){
+          let code = babel.transformFromAst(t.file(t.program([t.expressionStatement(path.node.expression)]))).code;        
+          code = code.substring(0, code.length - 1)
+          path.parent.value = t.stringLiteral('${'+code.replace(/\n/g,'')+'}')
+        }
+      }
+    })
+    let code = babel.transformFromAst(t.file(t.program([t.expressionStatement(path.node.value)]))).code
     
     // TODO: if name=fragment ... else
     code = code.substring(0, code.length - 1);
-    
+    if (isFragment) {
+    	code = code.substring(10, code.length -11);
+    }
     path.parent.body.push(
       babel.transform('class _{render(){ return this._render`'+code+'`}}')
     	.ast.program.body[0].body.body[0]
@@ -60,6 +70,18 @@ export default function (babel) {
           sc.object.name === 'hyperHTML'
         ) {
           addConstructor(path)
+          path.traverse({
+            ClassProperty(p){
+              const item = p.node
+              if (item.type === 'ClassProperty') {
+                if(item.key.name === 'render') {
+                  moveRender({node: item, parent: path.node.body, path: p })
+                } else {
+                  moveOther({node: item, parent: path.node.body })
+                }
+              }
+            }
+          })
           path.node.body.body.forEach(item => {
             if (item.type === 'ClassProperty') {
               if(item.key.name === 'render') {

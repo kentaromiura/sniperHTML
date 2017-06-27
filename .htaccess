@@ -19,10 +19,9 @@ this.onstaticfile = function (event) {
     })
   if(ext == '.js'){
     var wrup = new wrapup({
-        compress: true,
+        //compress: true,
         transforms: [{
-            src: function(module, callback){
-                
+            src: function(module, callback){  
                 module.src = babel.transform(module.src, Object.assign({
                   filename: module.src
                 }, babelrc)).code

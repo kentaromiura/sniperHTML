@@ -6,13 +6,18 @@ class Foo extends hyperHTML.Component {
   state = { name: '> Click me <' }
 }
 
-onload = () => {
-    hyperHTML.body`${
+class App extends hyperHTML.Component {
+    render = (
         <fragment>
             Hello,
             <hyper-foo onclick={
                 e => e.currentTarget.setState({name:'Clicked!'})
             } />
         </fragment>
-    }`;
+    )
+    state = {}
+}
+
+onload = () => {
+    hyperHTML.body`${<hyper-app />}`;
 };
