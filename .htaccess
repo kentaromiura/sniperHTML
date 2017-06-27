@@ -1,0 +1,46 @@
+var wrapup = require('wrapup')
+
+var babel = require('babel-core')
+
+this.onstaticfile = function (event) {
+
+  var
+    req = event.request,
+    res = event.response,
+    ext = event.ext.toLowerCase(),
+    code = '' + event.data,
+    fs = require('fs'),
+    babelrc = JSON.parse(fs.readFileSync('.babelrc', 'utf8'))
+    babelrc.plugins = babelrc.plugins.map(function(p){
+        if (p[0] === '.') {
+            return p.replace('.', __dirname)
+        }
+        return p
+    })
+  if(ext == '.js'){
+    var wrup = new wrapup({
+        compress: true,
+        transforms: [{
+            src: function(module, callback){
+                module.src = babel.transform(module.src, Object.assign({
+                  filename: module.src
+                }, babelrc)).code
+                callback(null, module)
+            }
+        }]
+    }),
+    result = ''
+
+    wrup.require(event.path)
+    wrup.up(function(error, result){
+      res.end(result)
+    })
+    event.preventDefault()
+  }
+
+}
+
+/// for debug purpose
+function log(e) {
+  console.log(e);
+}
