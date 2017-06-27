@@ -18,7 +18,7 @@ export default function (babel) {
   const appendDefine = path => {
     const name = path.node.id.name
     const register = babel.transform(`customElements.define('hyper-${name.toLowerCase()}', ${name})`);
-    path.parent.body.push(register.ast.program.body[0])
+    path.parent.body.splice(path.parent.body.findIndex(x => x === path.node) + 1, 0, register.ast.program.body[0])
   }
   
   const moveRender = path => {

@@ -19,12 +19,21 @@ this.onstaticfile = function (event) {
     })
   if(ext == '.js'){
     var wrup = new wrapup({
-        compress: true,
+       // compress: true,
         transforms: [{
             src: function(module, callback){
+                
                 module.src = babel.transform(module.src, Object.assign({
                   filename: module.src
                 }, babelrc)).code
+                
+                // for some reason the template literal is not transformed, do a second pass...
+                module.src = babel.transform(module.src, Object.assign({
+                  filename: module.src
+                }, babelrc, {
+                    "plugins": ["transform-es2015-template-literals"]
+                })).code
+                
                 callback(null, module)
             }
         }]
@@ -33,6 +42,7 @@ this.onstaticfile = function (event) {
 
     wrup.require(event.path)
     wrup.up(function(error, result){
+      if(error) console.log("ERROR: ", error)
       res.end(result)
     })
     event.preventDefault()

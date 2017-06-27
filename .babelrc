@@ -4,6 +4,7 @@
     "syntax-class-properties", 
     "syntax-jsx",
     "./babel-plugin-transpiled.js",
-    "transform-class-properties"
+    "./babel-jsx-to-wire-transpiled.js",
+    "transform-class-properties"   
     ]
 }

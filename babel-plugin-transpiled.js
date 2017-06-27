@@ -30,7 +30,7 @@ exports.default = function (babel) {
   var appendDefine = function appendDefine(path) {
     var name = path.node.id.name;
     var register = babel.transform('customElements.define(\'hyper-' + name.toLowerCase() + '\', ' + name + ')');
-    path.parent.body.push(register.ast.program.body[0]);
+    path.parent.body.splice(path.parent.body.findIndex(function(x){ return x === path.node}) + 1, 0, register.ast.program.body[0])
   };
 
   var moveRender = function moveRender(path) {
