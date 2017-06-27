@@ -19,7 +19,7 @@ this.onstaticfile = function (event) {
     })
   if(ext == '.js'){
     var wrup = new wrapup({
-       // compress: true,
+        compress: true,
         transforms: [{
             src: function(module, callback){
                 
@@ -33,7 +33,6 @@ this.onstaticfile = function (event) {
                 }, babelrc, {
                     "plugins": ["transform-es2015-template-literals"]
                 })).code
-                
                 callback(null, module)
             }
         }]

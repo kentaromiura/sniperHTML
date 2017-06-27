@@ -7,13 +7,12 @@ class Foo extends hyperHTML.Component {
 }
 
 onload = () => {
-    const body = (
+    hyperHTML.body`${
         <fragment>
             Hello,
             <hyper-foo onclick={
                 e => e.currentTarget.setState({name:'Clicked!'})
             } />
         </fragment>
-    );
-    hyperHTML.body`${body}`;
+    }`;
 };

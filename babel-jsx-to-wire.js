@@ -16,9 +16,8 @@ export default function (babel) {
         path.traverse({
           JSXExpressionContainer(path, context){
             if(!path.inList){
-              console.log(path)
-              const code = babel.transformFromAst(t.file(t.program([t.expressionStatement(path.node.expression)]))).code;
-        
+              let code = babel.transformFromAst(t.file(t.program([t.expressionStatement(path.node.expression)]))).code;        
+              code = code.substring(0, code.length - 1)
               path.parent.value = t.stringLiteral('${'+code.replace(/\n/g,'')+'}')
             }
           }
@@ -43,6 +42,18 @@ export default function (babel) {
             )
           ).expression
         );
+        if (path.parent.expressions) {
+          const idx = path.parent.expressions.findIndex(x => x === path.node)
+          if (idx>= 0) {
+            path.parent.expressions.splice(idx, 1, path.parent.expression)
+          }
+        }
+        if (path.parent.arguments) {
+          const idx = path.parent.arguments.findIndex(x => x === path.node)
+          if (idx>= 0) {
+            path.parent.arguments.splice(idx, 1, path.parent.expression)
+          }
+        }
         
       }
     }
